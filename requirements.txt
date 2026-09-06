@@ -1,0 +1,4 @@
+pyspark
+requests
+beautifulsoup4
+PyYAML
