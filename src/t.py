@@ -7,6 +7,8 @@ from config import CONFIG, project_path
 from pathlib import Path
 from logger import get_logger
 
+from database import upsert_jobs
+
 logger = get_logger(__name__)
 
 
@@ -100,9 +102,38 @@ def clean_linkedin_data(df):
         subset=["job_title", "company"]
     )
 
-    clean_df = clean_df.dropDuplicates()
+    clean_df = clean_df.dropDuplicates(["job_id"])
 
-    return clean_df
+    #return clean_df
+    return clean_df.select(
+    "job_id",
+    "job_title",
+    "company",
+    "location",
+    "date_posted",
+    "country",
+    "job_url",
+    "application_type",
+    "description",
+)
+
+
+
+def filter_candidate_jobs(df):
+    return (
+        df
+        .filter(col("description").isNotNull())
+        .filter(
+            ~lower(col("job_title")).rlike(
+                r"\b(senior|sr\.?|lead|principal|staff|director|head)\b"
+            )
+        )
+        .filter(
+            ~lower(col("description")).rlike(
+                r"\b(5\+ years|6\+ years|7\+ years|8\+ years|senior-level|senior position)\b"
+            )
+        )
+    )
 
 
 def clean_api_data(api_raw_df):
@@ -192,20 +223,34 @@ def run_transform():
 
     try:
         linkedin_raw_df = read_linkedin_data(spark)
-        api_raw_df = read_api_data(spark)
+        #api_raw_df = read_api_data(spark)
 
         linkedin_clean_df = clean_linkedin_data(
             linkedin_raw_df
         )
 
-        api_clean_df = clean_api_data(
-            api_raw_df
+        #api_clean_df = clean_api_data(
+        #    api_raw_df
+        #)
+
+        final_df = linkedin_clean_df
+
+        # exclue SENIOR 
+        before_filter = final_df.count()
+
+        final_df = filter_candidate_jobs(final_df)
+
+        after_filter = final_df.count()
+        logger.info(
+            "Junior Candidate filter: %s -> %s jobs",
+            before_filter,
+            after_filter,
         )
 
-        final_df = combine_data(
-            linkedin_clean_df,
-            api_clean_df,
-        )
+        #final_df = combine_data(
+        #    linkedin_clean_df,
+        #    api_clean_df,
+        #)
 
         OUTPUT_PATH.parent.mkdir(
             parents=True,
@@ -230,11 +275,35 @@ def run_transform():
             OUTPUT_PATH,
         )
 
+        rows = final_df.collect()
+
+        jobs = [
+            {
+                "source": "linkedin",
+                "source_job_id": str(row["job_id"]),
+                "job_title": row["job_title"],
+                "company": row["company"],
+                "location": row["location"],
+                "country": row["country"],
+                "date_posted": row["date_posted"],
+                "job_url": row["job_url"],
+                "application_type": row["application_type"],
+                "description": row["description"],
+            }
+            for row in rows
+        ]
+        
+        upsert_jobs(jobs)
+        #final_df.printSchema()
+        #final_df.show(5, truncate=False)
+
         return final_count
 
+    
     finally:
         logger.info("Stopping Spark session")
         spark.stop()
+
 
 if __name__ == "__main__":
     run_transform()

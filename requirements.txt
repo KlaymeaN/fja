@@ -2,3 +2,4 @@ pyspark
 requests
 beautifulsoup4
 PyYAML
+psycopg[binary]

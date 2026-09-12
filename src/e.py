@@ -59,13 +59,121 @@ def parse_job_card(card):
     location_el=card.select_one(".job-search-card__location")
     date_el    =card.select_one("time")
 
+    # job card 
+    base_card = card.select_one("[data-entity-urn]")
+    job_id = None 
+
+    if base_card:
+        entity_urn = base_card.get("data-entity-urn")
+
+        if entity_urn:
+            job_id = entity_urn.split(":")[-1]
+    job_url = (
+            f"https://www.linkedin.com/jobs/view/{job_id}" 
+            if job_id 
+            else None 
+        )
+
     return {
+            "job_id": job_id,
             "job_title": title_el.get_text(strip=True) if title_el else None,
             "company" : company_el.get_text(strip=True) if company_el else None,
             "location": location_el.get_text(strip=True) if location_el else None,
             "date_posted":(
                 date_el.get("datetime") or date_el.get_text(strip=True) if date_el else None),
+            "job_url": job_url,
     }
+
+
+def fetch_job_details(job_id):
+
+    if not job_id:
+        return {
+            "description": None,
+            "application_type": "unknown",
+        }
+
+    url = (
+        "https://www.linkedin.com/jobs-guest/"
+        f"jobs/api/jobPosting/{job_id}"
+    )
+
+    try:
+        resp = requests.get(
+            url,
+            headers=HEADERS,
+            timeout=LINKEDIN_CONFIG["timeout_seconds"],
+        )
+
+        if resp.status_code != 200:
+            logger.warning(
+                "Could not fetch details for job %s: HTTP %s",
+                job_id,
+                resp.status_code,
+            )
+
+            return {
+                "description": None,
+                "application_type": "unknown",
+            }
+
+        soup = BeautifulSoup(
+            resp.text,
+            "html.parser",
+        )
+
+        # DESCRIPTION
+
+        description_el = soup.select_one(
+            ".show-more-less-html__markup"
+        )
+
+        if not description_el:
+            description_el = soup.select_one(
+                ".description__text"
+            )
+
+        description = None
+
+        if description_el:
+            description = description_el.get_text(
+                separator=" ",
+                strip=True,
+            )
+
+
+        page_text = soup.get_text(
+            " ",
+            strip=True,
+        ).lower()
+
+        if "easy apply" in page_text:
+            application_type = "easy_apply"
+
+        elif "apply" in page_text:
+            application_type = "external"
+
+        else:
+            application_type = "unknown"
+
+        return {
+            "description": description,
+            "application_type": application_type,
+        }
+
+    except requests.RequestException as exc:
+
+        logger.warning(
+            "Error fetching details for job %s: %s",
+            job_id,
+            exc,
+        )
+
+        return {
+            "description": None,
+            "application_type": "unknown",
+        }
+
 
 def fetch_jobs(limit=None):
     if limit is None:
@@ -107,6 +215,10 @@ def fetch_jobs(limit=None):
             for card in cards:
                 job = parse_job_card(card)
                 if job['job_title'] and job['company']:
+
+                    details = fetch_job_details(job["job_id"])
+                    job.update(details)
+
                     jobs.append(job)
                     location_jobs += 1
                     #if len(jobs) >= limit:
@@ -129,7 +241,15 @@ def save_to_csv(jobs):
     dated_file = RAW_DIR / f"jobs_{today_str}.csv"
     latest_file = RAW_DIR / "jobs_latest.csv"
 
-    fieldnames=["job_title", "company", "location", "date_posted"]
+    fieldnames=["job_id",
+                "job_title",
+                "company", 
+                "location", 
+                "date_posted",
+                "job_url",
+                "application_type",
+                "description",]
+
     for filename in [dated_file, latest_file]:
         with open(filename, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -152,7 +272,7 @@ def run_linkedin_ingestion():
     #print("Starting LinkedIn ingestion...")
     logger.info("Starting LinkedIn ingestion")
 
-    jobs = fetch_jobs()
+    jobs = fetch_jobs(limit=5)
 
     if not jobs:
         logger.error("No LinkedIn jobs were extracted")
