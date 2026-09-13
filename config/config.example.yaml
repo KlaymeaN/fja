@@ -1,0 +1,50 @@
+database:
+  host: localhost
+  port: 5432
+  name: job_pipeline 
+  user: job_user
+
+linkedin:
+  base_url: "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+
+  locations:
+    - "Amsterdam, Netherlands"
+
+  job_limit: 500
+  request_delay_seconds: 10
+  timeout_seconds: 20
+
+  params:
+    keywords: "Data Engineer Software Engineer"
+    distance: "150"
+    f_TPR: "r604800"
+
+
+api:
+  url: "https://www.arbeitnow.com/api/job-board-api"
+
+  max_pages: 1
+  max_retries: 3
+  timeout_seconds: 10
+
+  retryable_status_codes:
+    - 429
+    - 500
+    - 502
+    - 503
+
+
+spark:
+  app_name: "JobMarketPipeline"
+  master: "local[*]"
+
+
+paths:
+  linkedin_raw: "data/raw/linkedin"
+  api_raw: "data/raw/api"
+  processed_jobs: "data/processed/jobs"
+
+logging:
+  directory: "logs"
+  filename: "pipeline.log"
+  level: "INFO"

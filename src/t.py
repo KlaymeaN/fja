@@ -99,7 +99,7 @@ def clean_linkedin_data(df):
     )
 
     clean_df = clean_df.dropna(
-        subset=["job_title", "company"]
+        subset=["job_id","job_title", "company"]
     )
 
     clean_df = clean_df.dropDuplicates(["job_id"])
@@ -263,7 +263,8 @@ def run_transform():
             .parquet(str(OUTPUT_PATH))
         )
 
-        final_count = final_df.count()
+        #final_count = final_df.count()
+        final_count = after_filter
 
         logger.info(
             "Spark transformation complete: %s jobs",
@@ -293,11 +294,18 @@ def run_transform():
             for row in rows
         ]
         
-        upsert_jobs(jobs)
+        #upsert_jobs(jobs)
+        db_stats = upsert_jobs(jobs)
         #final_df.printSchema()
         #final_df.show(5, truncate=False)
 
-        return final_count
+        #return final_count
+        return {
+            "input_jobs": before_filter,
+            "filtered_out": before_filter - after_filter,
+            "final_jobs": final_count,
+            "database": db_stats,
+        }
 
     
     finally:

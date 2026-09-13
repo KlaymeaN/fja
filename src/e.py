@@ -272,7 +272,7 @@ def run_linkedin_ingestion():
     #print("Starting LinkedIn ingestion...")
     logger.info("Starting LinkedIn ingestion")
 
-    jobs = fetch_jobs(limit=5)
+    jobs = fetch_jobs()
 
     if not jobs:
         logger.error("No LinkedIn jobs were extracted")
@@ -293,7 +293,12 @@ def run_linkedin_ingestion():
         latest_file,
     )
 
-    return latest_file
+    #return latest_file
+    return {
+        "jobs_fetched": len(jobs),
+        "dated_file": dated_file,
+        "latest_file": latest_file,
+    }
 
 
 if __name__ == "__main__":

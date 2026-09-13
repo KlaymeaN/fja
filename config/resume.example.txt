@@ -1,0 +1,59 @@
+Education:
+
+* MSc Applied Data Engineering, Westhaven Institute of Technology, Lornwick, 2022–2024.
+* BSc Information Systems Engineering, Norchester University, Velmont, 2018–2022.
+
+Technical skills:
+Python, SQL, PySpark, Pandas, NumPy, PostgreSQL, MySQL, Docker, Git, Linux, REST APIs, JSON, ETL/ELT, relational data modelling, data quality, cloud platforms, dashboards, statistics, machine learning, NLP and API integration.
+
+Business/Product skills:
+Business analysis, requirements clarification, process analysis, KPI analysis, root-cause analysis, stakeholder management, Agile/Scrum, product ownership, documentation, commercial analysis, sourcing, purchasing and supplier coordination.
+
+Professional experience:
+
+* Data Engineer / Analytics Developer, Blueforge Systems, Kelmere, Ardonia.
+
+  * Built and maintained data pipelines for customer, sales and operational datasets.
+  * Developed ETL workflows using Python, SQL and PySpark.
+  * Created automated validation and data-quality checks for incoming datasets.
+  * Containerized internal applications using Docker and supported deployment to cloud infrastructure.
+  * Improved recurring pipeline reliability and reduced failed processing jobs by approximately 35%.
+
+Relevant projects:
+
+* Automated Job Market Data Pipeline:
+
+  * Built an end-to-end pipeline using Python, PySpark, PostgreSQL, REST APIs, Parquet and Docker.
+  * Designed the workflow for automated scheduled execution on a Linux server.
+
+* Loan Processing Backend and KPI Dashboard:
+
+  * Built a REST API for managing application workflows.
+  * Designed a relational database for customers, applications and status history.
+  * Added operational KPIs and simple reporting dashboards.
+
+* Customer Activity Prediction:
+
+  * Analysed behavioural time-series data using Python and statistical methods.
+  * Developed classification models and evaluated model performance.
+
+* Linux System Monitor:
+
+  * Developed a lightweight terminal-based monitoring tool in C.
+
+Certification:
+
+* Certified Agile Product Foundations, Northstar Professional Academy.
+* Fundamentals of Commercial Operations, Velmont Business Institute, 60 hours.
+
+Languages:
+
+* English: Fluent.
+* Lornic: Native.
+* Westarian: Intermediate.
+
+Target roles:
+Junior Data Engineer, Junior Software Engineer, Analytics Engineer, Data Analyst, 
+Location:
+Based in Greyhaven, Ardonia. Open to relocation and international opportunities.
+
