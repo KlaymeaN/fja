@@ -1,0 +1,10 @@
+config/config.yaml 
+config/resume.txt 
+
+data/raw/ 
+data/processed/
+
+logs/ 
+
+__pycache__/
+
